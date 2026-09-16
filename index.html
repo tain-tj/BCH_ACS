@@ -5,13 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ACS Patient Record</title>
     
-    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
@@ -23,31 +19,28 @@
         .form-label { font-weight: 500; color: #333; }
         .btn-custom { border-radius: 20px; padding: 10px 25px; }
         .footer-text { text-align: center; font-weight: 600; color: #dc3545; margin-top: 30px; margin-bottom: 30px; }
+        .table-meds th, .table-meds td { vertical-align: middle; }
     </style>
 </head>
 <body>
 
 <div class="container pb-5">
-    <!-- Logo & Header -->
     <div class="logo-container">
-        <!-- เปลี่ยน URL รูปโลโก้โรงพยาบาลของคุณที่นี่ -->
+        <!-- เปลี่ยน URL โลโก้ของคุณที่นี่ -->
         <img src="https://via.placeholder.com/150/dc3545/FFFFFF?text=LOGO" alt="Hospital Logo">
         <h3 class="mt-3 text-danger"><i class="fa-solid fa-heart-pulse"></i> แบบฟอร์มเก็บข้อมูลผู้ป่วย ACS</h3>
         <p class="text-muted">(ACUTE CORONARY SYNDROME)<br>เพื่อพัฒนาคุณภาพการดูแลผู้ป่วยอย่างปลอดภัย รวดเร็ว และมีประสิทธิภาพ</p>
     </div>
 
-    <!-- Mode Selection -->
     <div class="text-center mb-4">
         <div class="btn-group" role="group">
-            <input type="radio" class="btn-check" name="mode" id="modeNew" value="new" checked onchange="toggleMode()">
+            <input type="radio" class="btn-check" name="modeSelect" id="modeNew" value="new" checked onchange="toggleMode()">
             <label class="btn btn-outline-danger" for="modeNew"><i class="fa-solid fa-user-plus"></i> ลงข้อมูลใหม่</label>
-
-            <input type="radio" class="btn-check" name="mode" id="modeEdit" value="edit" onchange="toggleMode()">
+            <input type="radio" class="btn-check" name="modeSelect" id="modeEdit" value="edit" onchange="toggleMode()">
             <label class="btn btn-outline-danger" for="modeEdit"><i class="fa-solid fa-user-pen"></i> แก้ไขข้อมูลเดิม</label>
         </div>
     </div>
 
-    <!-- Edit Search Panel (Hidden by default) -->
     <div id="searchPanel" class="card mb-4" style="display: none;">
         <div class="card-body bg-light rounded">
             <div class="row align-items-end">
@@ -57,66 +50,33 @@
                 </div>
                 <div class="col-md-4 mt-3 mt-md-0 d-grid gap-2 d-md-block">
                     <button class="btn btn-primary" onclick="searchData()"><i class="fa-solid fa-magnifying-glass"></i> ค้นหา</button>
-                    <!-- <button class="btn btn-secondary"><i class="fa-solid fa-barcode"></i> สแกน</button> -->
                 </div>
             </div>
         </div>
     </div>
 
     <form id="acsForm" onsubmit="submitForm(event)">
-        
-        <!-- ข้อมูลทั่วไป -->
+        <!-- 1. ข้อมูลทั่วไป -->
         <div class="card">
             <div class="card-header"><i class="fa-solid fa-address-card"></i> 1. ข้อมูลทั่วไป</div>
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label">วันที่บันทึกข้อมูล</label>
-                        <input type="date" class="form-control" id="recordDate" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">ผู้บันทึก</label>
-                        <input type="text" class="form-control" id="recorder" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">HN</label>
-                        <input type="text" class="form-control" id="hn" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">AN</label>
-                        <input type="text" class="form-control" id="an">
-                    </div>
+                    <div class="col-md-6"><label class="form-label">วันที่บันทึกข้อมูล</label><input type="date" class="form-control" id="recordDate" name="recordDate" required></div>
+                    <div class="col-md-6"><label class="form-label">ผู้บันทึก</label><input type="text" class="form-control" id="recorder" name="recorder" required></div>
+                    <div class="col-md-6"><label class="form-label">HN</label><input type="text" class="form-control" id="hn" name="hn" required></div>
+                    <div class="col-md-6"><label class="form-label">AN</label><input type="text" class="form-control" name="an"></div>
                     <div class="col-md-4">
                         <label class="form-label">เพศ</label>
-                        <select class="form-select" id="sex">
-                            <option value="ชาย">ชาย</option>
-                            <option value="หญิง">หญิง</option>
+                        <select class="form-select" name="sex">
+                            <option value="ชาย">ชาย</option><option value="หญิง">หญิง</option>
                         </select>
                     </div>
-                    <div class="col-md-4">
-                        <label class="form-label">อายุ (ปี)</label>
-                        <input type="number" class="form-control" id="age">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">น้ำหนัก (kg)</label>
-                        <input type="number" step="0.1" class="form-control" id="weight" oninput="calculateBMI()">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">ส่วนสูง (cm)</label>
-                        <input type="number" step="0.1" class="form-control" id="height" oninput="calculateBMI()">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">BMI (kg/m²)</label>
-                        <input type="text" class="form-control bg-light" id="bmi" readonly>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">วันที่มาติดต่อโรงพยาบาล</label>
-                        <input type="date" class="form-control" id="visitDate" onchange="calculateIndicators()">
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">เวลามาติดต่อโรงพยาบาล</label>
-                        <input type="time" class="form-control" id="visitTime" onchange="calculateIndicators()">
-                    </div>
+                    <div class="col-md-4"><label class="form-label">อายุ (ปี)</label><input type="number" class="form-control" name="age"></div>
+                    <div class="col-md-4"><label class="form-label">น้ำหนัก (kg)</label><input type="number" step="0.1" class="form-control" id="weight" name="weight" oninput="calculateBMI()"></div>
+                    <div class="col-md-6"><label class="form-label">ส่วนสูง (cm)</label><input type="number" step="0.1" class="form-control" id="height" name="height" oninput="calculateBMI()"></div>
+                    <div class="col-md-6"><label class="form-label">BMI (kg/m²)</label><input type="text" class="form-control bg-light" id="bmi" name="bmi" readonly></div>
+                    <div class="col-md-6"><label class="form-label">วันที่มาติดต่อโรงพยาบาล</label><input type="date" class="form-control" id="visitDate" name="visitDate" onchange="calculateIndicators()"></div>
+                    <div class="col-md-6"><label class="form-label">เวลามาติดต่อโรงพยาบาล</label><input type="time" class="form-control" id="visitTime" name="visitTime" onchange="calculateIndicators()"></div>
                 </div>
             </div>
         </div>
@@ -124,22 +84,160 @@
         <!-- 2. การประเมินและการวินิจฉัย -->
         <div class="card">
             <div class="card-header"><i class="fa-solid fa-stethoscope"></i> 2. การประเมินและการวินิจฉัย</div>
+            <div class="card-body row g-3">
+                <div class="col-md-6"><label class="form-label">เวลาทำ EKG ครั้งแรก</label><input type="time" class="form-control" id="ekgTime" name="ekgTime" onchange="calculateIndicators()"></div>
+                <div class="col-md-6">
+                    <label class="form-label">Diagnosis (วินิจฉัยเบื้องต้น)</label>
+                    <div class="form-check"><input class="form-check-input" type="radio" name="diagnosis" value="STEMI"> <label class="form-check-label">STEMI</label></div>
+                    <div class="form-check"><input class="form-check-input" type="radio" name="diagnosis" value="NSTEMI"> <label class="form-check-label">NSTEMI</label></div>
+                    <div class="form-check"><input class="form-check-input" type="radio" name="diagnosis" value="Unstable Angina"> <label class="form-check-label">Unstable Angina</label></div>
+                    <div class="form-check d-flex align-items-center gap-2">
+                        <input class="form-check-input" type="radio" name="diagnosis" value="อื่น ๆ"> 
+                        <label class="form-check-label">อื่น ๆ</label>
+                        <input type="text" class="form-control form-control-sm w-75" name="diagnosis_other">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. การให้ยา ACS -->
+        <div class="card">
+            <div class="card-header"><i class="fa-solid fa-pills"></i> 3. การให้ยา ACS</div>
             <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label">เวลาทำ EKG ครั้งแรก</label>
-                        <input type="time" class="form-control" id="ekgTime" onchange="calculateIndicators()">
+                <div class="table-responsive">
+                    <table class="table table-bordered table-meds">
+                        <thead class="table-light"><tr><th>ยา</th><th class="text-center">ได้รับ</th><th>เวลาที่ได้รับ</th></tr></thead>
+                        <tbody>
+                            <!-- รายการยา -->
+                            <tr><td>ASA</td><td class="text-center"><input class="form-check-input" type="checkbox" name="med_asa"></td><td><input type="time" class="form-control form-control-sm" name="med_asa_time"></td></tr>
+                            <tr><td>Clopidogrel</td><td class="text-center"><input class="form-check-input" type="checkbox" name="med_clopidogrel"></td><td><input type="time" class="form-control form-control-sm" name="med_clopidogrel_time"></td></tr>
+                            <tr><td>Ticagrelor</td><td class="text-center"><input class="form-check-input" type="checkbox" name="med_ticagrelor"></td><td><input type="time" class="form-control form-control-sm" name="med_ticagrelor_time"></td></tr>
+                            <tr><td>Heparin</td><td class="text-center"><input class="form-check-input" type="checkbox" name="med_heparin"></td><td><input type="time" class="form-control form-control-sm" name="med_heparin_time"></td></tr>
+                            <tr><td>Enoxaparin</td><td class="text-center"><input class="form-check-input" type="checkbox" name="med_enoxaparin"></td><td><input type="time" class="form-control form-control-sm" name="med_enoxaparin_time"></td></tr>
+                            <tr><td>Nitroglycerin</td><td class="text-center"><input class="form-check-input" type="checkbox" name="med_nitro"></td><td><input type="time" class="form-control form-control-sm" name="med_nitro_time"></td></tr>
+                            <tr><td>Morphine</td><td class="text-center"><input class="form-check-input" type="checkbox" name="med_morphine"></td><td><input type="time" class="form-control form-control-sm" name="med_morphine_time"></td></tr>
+                            <tr><td>Statin</td><td class="text-center"><input class="form-check-input" type="checkbox" name="med_statin"></td><td><input type="time" class="form-control form-control-sm" name="med_statin_time"></td></tr>
+                            <tr>
+                                <td><div class="d-flex align-items-center gap-2">อื่น ๆ <input type="text" class="form-control form-control-sm w-75" name="med_other_name"></div></td>
+                                <td class="text-center"><input class="form-check-input" type="checkbox" name="med_other"></td>
+                                <td><input type="time" class="form-control form-control-sm" name="med_other_time"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. การรักษาเร่งด่วน -->
+        <div class="card">
+            <div class="card-header"><i class="fa-solid fa-truck-medical"></i> 4. การรักษาเร่งด่วน (Reperfusion)</div>
+            <div class="card-body">
+                <div class="row mb-3 align-items-center">
+                    <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" name="reperfusion_pci"> <label class="form-check-label fw-bold">Primary PCI</label></div></div>
+                    <div class="col-md-4"><div class="input-group"><span class="input-group-text">วันที่</span><input type="date" class="form-control" name="pci_date"></div></div>
+                    <div class="col-md-4"><div class="input-group"><span class="input-group-text">เวลา</span><input type="time" class="form-control" name="pci_time"></div></div>
+                </div>
+                <div class="row align-items-center">
+                    <div class="col-md-3"><div class="form-check"><input class="form-check-input" type="checkbox" name="reperfusion_med"> <label class="form-check-label fw-bold">Medical Treatment</label></div></div>
+                    <div class="col-md-4"><div class="input-group"><span class="input-group-text">วันที่</span><input type="date" class="form-control" id="medTreatDate" name="med_treat_date" onchange="calculateIndicators()"></div></div>
+                    <div class="col-md-4"><div class="input-group"><span class="input-group-text">เวลา</span><input type="time" class="form-control" id="medTreatTime" name="med_treat_time" onchange="calculateIndicators()"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. การตรวจสวนหัวใจ (CAG) -->
+        <div class="card">
+            <div class="card-header"><i class="fa-solid fa-heart-circle-check"></i> 5. การตรวจสวนหัวใจ (CAG)</div>
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6"><div class="input-group"><span class="input-group-text">วันที่ทำ CAG</span><input type="date" class="form-control" name="cag_date"></div></div>
+                    <div class="col-md-6"><div class="input-group"><span class="input-group-text">เวลา</span><input type="time" class="form-control" name="cag_time"></div></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 border-end">
+                        <label class="form-label fw-bold text-primary">ผลการทำ CAG</label>
+                        <div class="form-check"><input class="form-check-input" type="checkbox" name="cag_result" value="SVD"> <label>SVD (1 vessel disease)</label></div>
+                        <div class="form-check"><input class="form-check-input" type="checkbox" name="cag_result" value="DVD"> <label>DVD (2 vessel disease)</label></div>
+                        <div class="form-check"><input class="form-check-input" type="checkbox" name="cag_result" value="TVD"> <label>TVD (3 vessel disease)</label></div>
+                        <div class="form-check"><input class="form-check-input" type="checkbox" name="cag_result" value="LM disease"> <label>LM disease</label></div>
+                        <div class="form-check"><input class="form-check-input" type="checkbox" name="cag_result" value="No significant stenosis"> <label>No significant stenosis</label></div>
+                        <div class="form-check d-flex align-items-center gap-2 mt-1">
+                            <input class="form-check-input" type="checkbox" name="cag_result" value="อื่น ๆ"> <label>อื่น ๆ</label> <input type="text" class="form-control form-control-sm w-75" name="cag_result_other">
+                        </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Diagnosis (วินิจฉัยเบื้องต้น)</label>
-                        <select class="form-select" id="diagnosis">
-                            <option value="">เลือก...</option>
-                            <option value="STEMI">STEMI</option>
-                            <option value="NSTEMI">NSTEMI</option>
-                            <option value="Unstable Angina">Unstable Angina</option>
-                            <option value="อื่นๆ">อื่นๆ</option>
-                        </select>
+                        <label class="form-label fw-bold text-primary">Management</label>
+                        <div class="form-check"><input class="form-check-input" type="checkbox" name="mgmt_pci"> <label>PCI (ระบุเส้นเลือดที่ทำ)</label></div>
+                        <div class="ps-4 mb-2">
+                            <input type="text" class="form-control form-control-sm mb-1" name="mgmt_pci_ves1" placeholder="1.">
+                            <input type="text" class="form-control form-control-sm mb-1" name="mgmt_pci_ves2" placeholder="2.">
+                            <input type="text" class="form-control form-control-sm mb-1" name="mgmt_pci_ves3" placeholder="3.">
+                        </div>
+                        <div class="form-check"><input class="form-check-input" type="checkbox" name="mgmt_cabg"> <label>CABG</label></div>
+                        <div class="form-check"><input class="form-check-input" type="checkbox" name="mgmt_med"> <label>Medical treatment</label></div>
+                        <div class="form-check d-flex align-items-center gap-2 mt-1">
+                            <input class="form-check-input" type="checkbox" name="mgmt_other"> <label>อื่น ๆ</label> <input type="text" class="form-control form-control-sm" name="mgmt_other_text">
+                        </div>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. ภาวะแทรกซ้อน -->
+        <div class="card">
+            <div class="card-header"><i class="fa-solid fa-triangle-exclamation"></i> 6. ภาวะแทรกซ้อนระหว่างนอนโรงพยาบาล</div>
+            <div class="card-body row">
+                <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="comp" value="ไม่มี"> <label>ไม่มี</label></div></div>
+                <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="comp" value="Bleeding"> <label>Bleeding</label></div></div>
+                <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="comp" value="Stroke"> <label>Stroke</label></div></div>
+                <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="comp" value="Acute Kidney Injury (AKI)"> <label>Acute Kidney Injury (AKI)</label></div></div>
+                <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="comp" value="Arrhythmia"> <label>Arrhythmia</label></div></div>
+                <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="comp" value="Cardiogenic shock"> <label>Cardiogenic shock</label></div></div>
+                <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="comp" value="Heart failure"> <label>Heart failure</label></div></div>
+                <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="comp" value="Infection"> <label>Infection</label></div></div>
+                <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="comp" value="Recurrent ischemia"> <label>Recurrent ischemia</label></div></div>
+                <div class="col-md-12 mt-2 d-flex align-items-center gap-2">
+                    <div class="form-check"><input class="form-check-input" type="checkbox" name="comp" value="อื่น ๆ"> <label>อื่น ๆ</label></div>
+                    <input type="text" class="form-control form-control-sm w-50" name="comp_other">
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. ข้อมูลการจำหน่าย -->
+        <div class="card">
+            <div class="card-header"><i class="fa-solid fa-house-medical"></i> 7. ข้อมูลการจำหน่าย</div>
+            <div class="card-body row g-3">
+                <div class="col-md-6"><label class="form-label">วันที่กลับบ้าน</label><input type="date" class="form-control" id="dischargeDate" name="discharge_date" onchange="calculateIndicators()"></div>
+                <div class="col-md-6">
+                    <label class="form-label">ผลลัพธ์เมื่อจำหน่าย</label>
+                    <div class="d-flex gap-4">
+                        <div class="form-check"><input class="form-check-input" type="radio" name="discharge_result" value="Alive"> <label>Alive (กลับบ้าน)</label></div>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="discharge_result" value="Refer"> <label>Refer</label></div>
+                        <div class="form-check"><input class="form-check-input" type="radio" name="discharge_result" value="Dead"> <label>Dead</label></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8. ยากลับบ้าน -->
+        <div class="card">
+            <div class="card-header"><i class="fa-solid fa-prescription-bottle-medical"></i> 8. ยากลับบ้าน (Discharge Medication)</div>
+            <div class="card-body row">
+                <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="dch_med" value="Aspirin"> <label>Aspirin</label></div></div>
+                <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="dch_med" value="Clopidogrel"> <label>Clopidogrel</label></div></div>
+                <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="dch_med" value="Ticagrelor"> <label>Ticagrelor</label></div></div>
+                <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="dch_med" value="Statin"> <label>Statin</label></div></div>
+                <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="dch_med" value="Beta-blocker"> <label>Beta-blocker</label></div></div>
+                <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="dch_med" value="ACEI / ARB / ARNI"> <label>ACEI / ARB / ARNI</label></div></div>
+                <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="dch_med" value="Nitrate"> <label>Nitrate</label></div></div>
+                <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="dch_med" value="CCB"> <label>CCB</label></div></div>
+                <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="dch_med" value="Spironolactone"> <label>Spironolactone</label></div></div>
+                <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="dch_med" value="SGLT2 inhibitor"> <label>SGLT2 inhibitor</label></div></div>
+                <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="dch_med" value="PPI"> <label>PPI</label></div></div>
+                <div class="col-md-4"><div class="form-check"><input class="form-check-input" type="checkbox" name="dch_med" value="Warfarin / NOAC"> <label>Warfarin / NOAC</label></div></div>
+                <div class="col-md-12 mt-2 d-flex align-items-center gap-2">
+                    <div class="form-check"><input class="form-check-input" type="checkbox" name="dch_med" value="อื่น ๆ"> <label>อื่น ๆ</label></div>
+                    <input type="text" class="form-control form-control-sm w-50" name="dch_med_other">
                 </div>
             </div>
         </div>
@@ -149,38 +247,19 @@
             <div class="card-header bg-primary text-white"><i class="fa-solid fa-chart-line"></i> ตัวชี้วัดคุณภาพ (Quality Indicator)</div>
             <div class="card-body">
                 <table class="table table-bordered text-center">
-                    <thead class="table-light">
-                        <tr>
-                            <th>ตัวชี้วัด</th>
-                            <th>เป้าหมาย</th>
-                            <th>ผลลัพธ์ (อัตโนมัติ)</th>
-                        </tr>
-                    </thead>
+                    <thead class="table-light"><tr><th>ตัวชี้วัด</th><th>เป้าหมาย</th><th>ผลลัพธ์ (อัตโนมัติ)</th></tr></thead>
                     <tbody>
-                        <tr>
-                            <td>Door-to-EKG</td>
-                            <td>≤ 10 นาที</td>
-                            <td><span id="doorToEkg" class="fw-bold text-primary">-</span> นาที</td>
-                        </tr>
-                        <tr>
-                            <td>Door-to-Balloon</td>
-                            <td>≤ 90 นาที</td>
-                            <td><span id="doorToBalloon" class="fw-bold text-primary">-</span> นาที</td>
-                        </tr>
-                        <tr>
-                            <td>Length of Stay (LOS)</td>
-                            <td>≤ 5 วัน</td>
-                            <td><span id="los" class="fw-bold text-primary">-</span> วัน</td>
-                        </tr>
+                        <tr><td>Door-to-EKG<br><small class="text-muted">(EKG ครั้งแรก – เวลามาติดต่อ)</small></td><td>≤ 10 นาที</td><td><span id="doorToEkg" class="fw-bold text-primary">-</span> นาที</td></tr>
+                        <tr><td>Door-to-Balloon<br><small class="text-muted">(Medical treatment – เวลามาติดต่อ)</small></td><td>≤ 90 นาที</td><td><span id="doorToBalloon" class="fw-bold text-primary">-</span> นาที</td></tr>
+                        <tr><td>Length of Stay (LOS)<br><small class="text-muted">(วันที่กลับบ้าน – วันที่มาติดต่อ)</small></td><td>≤ 5 วัน</td><td><span id="los" class="fw-bold text-primary">-</span> วัน</td></tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <div class="text-center mt-4">
+        <div class="text-center mt-4 mb-3">
             <button type="submit" class="btn btn-danger btn-custom btn-lg"><i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูล</button>
         </div>
-
     </form>
 
     <div class="footer-text">
@@ -189,14 +268,11 @@
 </div>
 
 <script>
-    // ตั้งค่า URL ของ Apps Script ที่นี่
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-cDjGwiT6Cnhaia0dKOMBWgY5vDi6Vxjx-M67Vouk5_iaHLjkiwN_8vQmH_VLkLYX/exec';
-
-    // ตั้งค่าวันที่ปัจจุบันเริ่มต้น
     document.getElementById('recordDate').valueAsDate = new Date();
 
     function toggleMode() {
-        const mode = document.querySelector('input[name="mode"]:checked').value;
+        const mode = document.querySelector('input[name="modeSelect"]:checked').value;
         if (mode === 'edit') {
             document.getElementById('searchPanel').style.display = 'block';
             document.getElementById('hn').readOnly = true;
@@ -205,63 +281,91 @@
             document.getElementById('hn').readOnly = false;
             document.getElementById('acsForm').reset();
             document.getElementById('recordDate').valueAsDate = new Date();
-            document.getElementById('doorToEkg').innerText = '-';
-            document.getElementById('doorToBalloon').innerText = '-';
-            document.getElementById('los').innerText = '-';
+            resetIndicators();
         }
+    }
+
+    function resetIndicators(){
+        document.getElementById('doorToEkg').innerText = '-';
+        document.getElementById('doorToBalloon').innerText = '-';
+        document.getElementById('los').innerText = '-';
     }
 
     function calculateBMI() {
         const weight = parseFloat(document.getElementById('weight').value);
         const height = parseFloat(document.getElementById('height').value) / 100;
-        if (weight > 0 && height > 0) {
-            const bmi = (weight / (height * height)).toFixed(2);
-            document.getElementById('bmi').value = bmi;
-        } else {
-            document.getElementById('bmi').value = '';
-        }
+        document.getElementById('bmi').value = (weight > 0 && height > 0) ? (weight / (height * height)).toFixed(2) : '';
     }
 
     function calculateIndicators() {
-        // คำนวณ Door-to-EKG
-        const visitTime = document.getElementById('visitTime').value;
-        const ekgTime = document.getElementById('ekgTime').value;
-        if (visitTime && ekgTime) {
-            const vt = new Date(`1970-01-01T${visitTime}:00`);
-            const et = new Date(`1970-01-01T${ekgTime}:00`);
-            let diffMins = (et - vt) / 60000;
-            if (diffMins < 0) diffMins += 24 * 60; // ข้ามวัน
-            document.getElementById('doorToEkg').innerText = diffMins;
+        const visitDateStr = document.getElementById('visitDate').value;
+        const visitTimeStr = document.getElementById('visitTime').value;
+        const ekgTimeStr = document.getElementById('ekgTime').value;
+        const medDateStr = document.getElementById('medTreatDate').value;
+        const medTimeStr = document.getElementById('medTreatTime').value;
+        const dischargeDateStr = document.getElementById('dischargeDate').value;
+
+        // Door-to-EKG (สมมติว่าเป็นวันเดียวกัน)
+        if (visitTimeStr && ekgTimeStr) {
+            const vt = new Date(`1970-01-01T${visitTimeStr}:00`);
+            const et = new Date(`1970-01-01T${ekgTimeStr}:00`);
+            let diff = (et - vt) / 60000;
+            if (diff < 0) diff += 1440; 
+            document.getElementById('doorToEkg').innerText = diff;
         }
-        
-        // (ส่วนคำนวณ Door-to-Balloon และ LOS สามารถเพิ่ม Logic ดึงค่าฟิลด์ที่เกี่ยวข้องแบบเดียวกัน)
+
+        // Door-to-Balloon
+        if (visitDateStr && visitTimeStr && medDateStr && medTimeStr) {
+            const vdt = new Date(`${visitDateStr}T${visitTimeStr}:00`);
+            const mdt = new Date(`${medDateStr}T${medTimeStr}:00`);
+            let diffMins = (mdt - vdt) / 60000;
+            document.getElementById('doorToBalloon').innerText = diffMins >= 0 ? diffMins : '-';
+        }
+
+        // LOS
+        if (visitDateStr && dischargeDateStr) {
+            const vd = new Date(visitDateStr);
+            const dd = new Date(dischargeDateStr);
+            const diffTime = Math.abs(dd - vd);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            document.getElementById('los').innerText = diffDays;
+        }
     }
 
     function searchData() {
         const hn = document.getElementById('searchHN').value;
         if(!hn) return Swal.fire('แจ้งเตือน', 'กรุณาระบุ HN', 'warning');
-        
-        Swal.fire({ title: 'กำลังค้นหา...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+        Swal.fire({ title: 'กำลังค้นหา...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         
         fetch(`${SCRIPT_URL}?action=search&hn=${hn}`)
         .then(res => res.json())
         .then(data => {
             if(data.status === 'success') {
                 Swal.close();
+                // Map Data (ดึงจาก JSON มาเติมลง Form)
                 const d = data.data;
-                // นำข้อมูลยัดลงฟอร์ม
-                document.getElementById('hn').value = d.hn || '';
-                document.getElementById('recordDate').value = d.recordDate || '';
-                document.getElementById('recorder').value = d.recorder || '';
-                document.getElementById('an').value = d.an || '';
-                document.getElementById('sex').value = d.sex || 'ชาย';
-                document.getElementById('age').value = d.age || '';
-                document.getElementById('weight').value = d.weight || '';
-                document.getElementById('height').value = d.height || '';
-                document.getElementById('visitDate').value = d.visitDate || '';
-                document.getElementById('visitTime').value = d.visitTime || '';
-                document.getElementById('ekgTime').value = d.ekgTime || '';
-                document.getElementById('diagnosis').value = d.diagnosis || '';
+                const form = document.getElementById('acsForm');
+                
+                // Reset form ก่อนเติมข้อมูล
+                form.reset();
+                resetIndicators();
+
+                Object.keys(d).forEach(key => {
+                    const inputs = form.querySelectorAll(`[name="${key}"]`);
+                    if(inputs.length === 0) return;
+                    
+                    if(inputs[0].type === 'checkbox' || inputs[0].type === 'radio') {
+                        let values = Array.isArray(d[key]) ? d[key] : [d[key]];
+                        inputs.forEach(input => {
+                            if(values.includes(input.value) || values.includes("on") || values.includes(true)) {
+                                input.checked = true;
+                            }
+                        });
+                    } else {
+                        inputs[0].value = d[key];
+                    }
+                });
+                
                 calculateBMI();
                 calculateIndicators();
                 Swal.fire('สำเร็จ', 'ดึงข้อมูลสำเร็จ', 'success');
@@ -273,39 +377,40 @@
 
     function submitForm(e) {
         e.preventDefault();
-        
-        const mode = document.querySelector('input[name="mode"]:checked').value;
+        const mode = document.querySelector('input[name="modeSelect"]:checked').value;
         const hn = document.getElementById('hn').value;
         
-        // รวบรวมข้อมูลทั้งหมด (ตัดย่อให้ดูเป็นตัวอย่าง คุณสามารถเพิ่มฟิลด์ตาม DOM id ได้เลย)
-        const formData = {
-            hn: hn,
-            recordDate: document.getElementById('recordDate').value,
-            recorder: document.getElementById('recorder').value,
-            an: document.getElementById('an').value,
-            sex: document.getElementById('sex').value,
-            age: document.getElementById('age').value,
-            weight: document.getElementById('weight').value,
-            height: document.getElementById('height').value,
-            bmi: document.getElementById('bmi').value,
-            visitDate: document.getElementById('visitDate').value,
-            visitTime: document.getElementById('visitTime').value,
-            ekgTime: document.getElementById('ekgTime').value,
-            diagnosis: document.getElementById('diagnosis').value
-        };
+        // กวาดข้อมูลจากฟอร์มทั้งหมดอัตโนมัติ
+        const form = document.getElementById('acsForm');
+        const formDataObj = new FormData(form);
+        const dataPayload = {};
+        
+        for (let [key, value] of formDataObj.entries()) {
+            if (dataPayload[key]) {
+                if (!Array.isArray(dataPayload[key])) {
+                    dataPayload[key] = [dataPayload[key]];
+                }
+                dataPayload[key].push(value);
+            } else {
+                dataPayload[key] = value;
+            }
+        }
 
-        Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+        Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
         fetch(SCRIPT_URL, {
             method: 'POST',
-            mode: 'no-cors', // ต้องใช้ no-cors สำหรับ Google Apps Script บางกรณี หรือตั้ง Header ฝั่งนู้น
-            body: JSON.stringify({ action: 'save', mode: mode, hn: hn, formData: formData }),
+            mode: 'no-cors',
+            body: JSON.stringify({ action: 'save', mode: mode, hn: hn, formData: dataPayload }),
             headers: { 'Content-Type': 'application/json' }
         })
         .then(() => {
-            // เนื่องจาก no-cors จะอ่าน response ตรงๆ ไม่ได้ เราจะ assume ว่าทำงานสำเร็จ
             Swal.fire('บันทึกสำเร็จ', 'ข้อมูลถูกบันทึกเรียบร้อยแล้ว', 'success').then(() => {
-                if(mode === 'new') document.getElementById('acsForm').reset();
+                if(mode === 'new') {
+                    form.reset();
+                    resetIndicators();
+                    document.getElementById('recordDate').valueAsDate = new Date();
+                }
             });
         }).catch(err => {
             Swal.fire('ข้อผิดพลาด', 'ไม่สามารถบันทึกข้อมูลได้', 'error');
