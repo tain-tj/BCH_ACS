@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <style>
         body { font-family: 'Prompt', sans-serif; background-color: #f4f7f6; }
@@ -23,19 +22,42 @@
         .table-meds th, .table-meds td { vertical-align: middle; padding: 5px; }
         .form-check-label { font-size: 0.95rem; }
         
-        /* ซ่อนปุ่มต่างๆ เวลาปริ้น PDF */
-        @media print { .no-print { display: none !important; } }
-
-        /* การตั้งค่าหน้าตาสำหรับ PDF */
-        .pdf-mode { font-size: 12px !important; }
-        .pdf-mode .card { margin-bottom: 8px; border: 1px solid #ccc; box-shadow: none; border-radius: 0; }
-        .pdf-mode .card-header { padding: 4px 10px; font-size: 13px; border-radius: 0 !important; }
-        .pdf-mode .card-body { padding: 8px 10px; }
-        .pdf-mode .form-control, .pdf-mode .form-select, .pdf-mode .input-group-text {
-            padding: 2px 6px; min-height: auto; font-size: 12px; border: 1px solid #aaa; border-radius: 2px;
+        /* ========================================================
+           การตั้งค่าหน้าตาสำหรับ "บันทึกเป็น PDF" (Native Print) 
+           ======================================================== */
+        @media print {
+            @page { size: A4 portrait; margin: 10mm; }
+            body { background-color: white !important; font-size: 12px !important; }
+            .no-print { display: none !important; }
+            
+            /* รีเซ็ต Container ให้เต็มหน้ากระดาษ */
+            .container { max-width: 100% !important; padding: 0 !important; width: 100% !important; margin: 0 !important; }
+            
+            /* ปรับกรอบ Card ให้เป็นเส้นขอบสีดำคมชัด */
+            .card { border: 1px solid #000 !important; box-shadow: none !important; margin-bottom: 8px !important; page-break-inside: avoid; border-radius: 0 !important; }
+            
+            /* บังคับให้สีพื้นหลังส่วนหัวติดไปด้วย */
+            .card-header { 
+                background-color: #dc3545 !important; 
+                color: white !important; 
+                padding: 4px 10px !important; 
+                font-size: 13px !important; 
+                border-radius: 0 !important; 
+                border-bottom: 1px solid #000 !important;
+                -webkit-print-color-adjust: exact !important; 
+                print-color-adjust: exact !important; 
+            }
+            .card-body { padding: 8px 10px !important; }
+            
+            /* จัดการตารางและช่องกรอกข้อมูลให้อ่านง่าย */
+            .table-meds th { background-color: #eee !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            .form-control, .form-select, .input-group-text { border: 1px solid #666 !important; padding: 2px 5px !important; font-size: 12px !important; height: auto !important; border-radius: 2px !important; box-shadow: none !important; }
+            .form-check-input { border: 1px solid #000 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            
+            h3 { font-size: 18px !important; margin: 5px 0; }
+            p { font-size: 11px !important; margin: 0; }
+            .footer-text { margin-top: 10px !important; font-size: 11px !important; }
         }
-        .pdf-mode h3 { font-size: 18px; margin: 5px 0; }
-        .pdf-mode p { font-size: 11px; margin: 0; }
     </style>
 </head>
 <body>
@@ -144,7 +166,6 @@
                 <div class="card-body">
                     <div class="row align-items-center mb-2">
                         <div class="col-md-3 col-12"><input class="form-check-input me-1" type="checkbox" name="reperfusion_pci"> <label class="fw-bold">Primary PCI</label></div>
-                        <!-- เพิ่ม ID pciDate และ pciTime และ onchange เข้าไปที่นี่ -->
                         <div class="col-md-4 col-6 d-flex align-items-center"><span class="me-2">วันที่</span><input type="date" class="form-control form-control-sm" id="pciDate" name="pci_date" onchange="calculateIndicators()"></div>
                         <div class="col-md-4 col-6 d-flex align-items-center"><span class="me-2">เวลา</span><input type="time" class="form-control form-control-sm" id="pciTime" name="pci_time" onchange="calculateIndicators()"></div>
                     </div>
@@ -261,7 +282,6 @@
                         <thead class="table-light"><tr><th>ตัวชี้วัด</th><th>เป้าหมาย</th><th>ผลลัพธ์ (อัตโนมัติ)</th></tr></thead>
                         <tbody>
                             <tr><td>Door-to-EKG<br><small class="text-muted">(EKG ครั้งแรก – เวลามาติดต่อ)</small></td><td>≤ 10 นาที</td><td><span id="doorToEkg" class="fw-bold text-primary">-</span> นาที</td></tr>
-                            <!-- ปรับแก้ข้อความ Door-to-Balloon เป็น Primary PCI -->
                             <tr><td>Door-to-Balloon<br><small class="text-muted">(Primary PCI – เวลามาติดต่อโรงพยาบาล)</small></td><td>≤ 90 นาที</td><td><span id="doorToBalloon" class="fw-bold text-primary">-</span> นาที</td></tr>
                             <tr><td>Length of Stay (LOS)<br><small class="text-muted">(วันที่กลับบ้าน – วันที่มาติดต่อ)</small></td><td>≤ 5 วัน</td><td><span id="los" class="fw-bold text-primary">-</span> วัน</td></tr>
                         </tbody>
@@ -396,52 +416,34 @@
         }).catch(() => Swal.fire('ผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์', 'error'));
     }
 
-    // ฟังก์ชันสร้าง PDF ที่ปรับปรุงใหม่ (เปลี่ยน Format ป้องกัน Error และ Reset จุด Scroll)
+    // ==========================================
+    // ฟังก์ชันสร้าง PDF แก้ปัญหาจอขาว 100%
+    // ==========================================
     function generatePDF() {
-        Swal.fire({ title: 'กำลังเตรียมไฟล์ PDF...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         const hnValue = document.getElementById('hn').value || 'Unknown';
-        const element = document.getElementById('printArea');
         
-        // บังคับเลื่อนจอขึ้นไปบนสุด ป้องกันบั๊กภาพดำของ html2canvas
-        window.scrollTo(0, 0);
-        element.classList.add('pdf-mode');
-
-        const opt = {
-            margin: [8, 8, 8, 8],
-            filename: `ACS_${hnValue}.pdf`,
-            // เปลี่ยนชนิดไฟล์ภาพเป็น png แก้อาการ Unsupported image type
-            image: { type: 'png' }, 
-            html2canvas: { scale: 2, useCORS: true, scrollY: 0, logging: false },
-            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-        };
-
-        try {
-            html2pdf().set(opt).from(element).save()
-            .then(() => {
-                element.classList.remove('pdf-mode');
-                Swal.close();
-                Swal.fire('สำเร็จ', 'โหลดไฟล์ PDF เรียบร้อยแล้ว', 'success');
-            })
-            .catch(err => {
-                console.error("PDF Generation Error: ", err);
-                element.classList.remove('pdf-mode');
-                Swal.close();
-                
-                // ระบบสำรอง หากทำไฟล์ PDF ผ่านไลบรารีไม่ได้ จะเปิดหน้าต่างสั่ง Print แบบข้อความคมชัดแทน
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'โหลด PDF อัตโนมัติขัดข้อง',
-                    text: 'ระบบจะเปิดหน้าต่างสั่งพิมพ์ ให้คุณเปลี่ยนปลายทางเครื่องปริ้นเป็น "บันทึกเป็น PDF (Save as PDF)" เพื่อดาวน์โหลดแทนครับ',
-                    confirmButtonText: 'ตกลง'
-                }).then(() => {
+        Swal.fire({
+            icon: 'info',
+            title: 'เตรียมดาวน์โหลด PDF',
+            text: 'ระบบจะเปิดหน้าต่างสั่งพิมพ์ ให้คุณเลือกเครื่องปริ้นเป็น "บันทึกเป็น PDF (Save as PDF)" ครับ',
+            confirmButtonText: 'ดำเนินการต่อ',
+            confirmButtonColor: '#dc3545'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // [สำคัญ] ต้องหน่วงเวลา 500ms ให้ Popup สีขาวของ SweetAlert ปิดและโดนลบออกจากหน้าจอก่อน 
+                // ถึงจะสั่ง window.print() ได้ เพื่อแก้ปัญหาหน้าจอขาวตอนเซฟ PDF
+                setTimeout(() => {
+                    // บังคับเปลี่ยนชื่อ Title ของเว็บชั่วคราว เพื่อให้ชื่อไฟล์ตอน Save เป็นชื่อที่ต้องการ
+                    const originalTitle = document.title;
+                    document.title = `ACS_HN_${hnValue}`; 
+                    
                     window.print();
-                });
-            });
-        } catch (error) {
-            element.classList.remove('pdf-mode');
-            Swal.close();
-            Swal.fire('ข้อผิดพลาด', 'เบราว์เซอร์ไม่รองรับ กรุณาลองใช้เบราว์เซอร์อื่น', 'error');
-        }
+                    
+                    // คืนค่าชื่อ Title กลับเป็นเหมือนเดิม
+                    document.title = originalTitle; 
+                }, 500); 
+            }
+        });
     }
 </script>
 
