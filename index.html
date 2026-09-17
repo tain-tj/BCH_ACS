@@ -112,8 +112,24 @@
                     <div class="col-md-3 col-6"><label class="form-label">ส่วนสูง (cm)</label><input type="number" step="0.1" class="form-control" id="height" name="height" oninput="calculateBMI()"></div>
                     <div class="col-md-3 col-6"><label class="form-label">BMI (kg/m²)</label><input type="text" class="form-control bg-light" id="bmi" name="bmi" readonly></div>
                     
-                    <div class="col-md-6 col-6"><label class="form-label">วันที่มาติดต่อโรงพยาบาล</label><input type="date" class="form-control" id="visitDate" name="visitDate" onchange="calculateIndicators()"></div>
-                    <div class="col-md-6 col-6"><label class="form-label">เวลามาติดต่อโรงพยาบาล</label><input type="time" class="form-control" id="visitTime" name="visitTime" onchange="calculateIndicators()"></div>
+                    <!-- ส่วนที่ปรับปรุง: วันที่ เวลา และแผนกที่ติดต่อ เรียงแบบ 3 คอลัมน์ -->
+                    <div class="col-md-4 col-6"><label class="form-label">วันที่มาติดต่อ</label><input type="date" class="form-control" id="visitDate" name="visitDate" onchange="calculateIndicators()"></div>
+                    <div class="col-md-4 col-6"><label class="form-label">เวลามาติดต่อ</label><input type="time" class="form-control" id="visitTime" name="visitTime" onchange="calculateIndicators()"></div>
+                    <div class="col-md-4 col-12">
+                        <label class="form-label">แผนกที่ติดต่อ</label>
+                        <select class="form-select" name="department">
+                            <option value="" disabled selected>เลือกแผนก...</option>
+                            <option value="ER">ER</option>
+                            <option value="OPD.MED">OPD.MED</option>
+                            <option value="OPD.Cardio&DM">OPD.Cardio&DM</option>
+                            <option value="ENT">ENT</option>
+                            <option value="PE">PE</option>
+                            <option value="HD">HD</option>
+                            <option value="OPD.SUR">OPD.SUR</option>
+                            <option value="OPD.Ortho">OPD.Ortho</option>
+                            <option value="OPD.OB">OPD.OB</option>
+                        </select>
+                    </div>
                 </div>
             </div>
 
@@ -322,7 +338,7 @@
 
 <script>
     // ==========================================
-    // ⚠️ ต้องวางลิงก์ Web App ใหม่ของคุณที่นี่เสมอ 
+    // ⚠️ อย่าลืมใส่ลิงก์ Web App ตรงนี้ 
     // ==========================================
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-cDjGwiT6Cnhaia0dKOMBWgY5vDi6Vxjx-M67Vouk5_iaHLjkiwN_8vQmH_VLkLYX/exec';
     
@@ -437,7 +453,7 @@
     }
 
     // ==========================================
-    // เปลี่ยน Fetch เป็นแบบ x-www-form-urlencoded เพื่อแก้บั๊ก CORS
+    // เปลี่ยน Fetch เป็นแบบ x-www-form-urlencoded
     // ==========================================
     function searchData() {
         const hn = document.getElementById('searchHN').value;
@@ -487,7 +503,6 @@
 
         Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
 
-        // สร้างข้อมูลแบบ Form Data หลบระบบความปลอดภัยของ Google
         const urlEncodedData = new URLSearchParams();
         urlEncodedData.append('action', 'save');
         urlEncodedData.append('mode', mode);
