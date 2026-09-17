@@ -144,13 +144,14 @@
                 <div class="card-body">
                     <div class="row align-items-center mb-2">
                         <div class="col-md-3 col-12"><input class="form-check-input me-1" type="checkbox" name="reperfusion_pci"> <label class="fw-bold">Primary PCI</label></div>
-                        <div class="col-md-4 col-6 d-flex align-items-center"><span class="me-2">วันที่</span><input type="date" class="form-control form-control-sm" name="pci_date"></div>
-                        <div class="col-md-4 col-6 d-flex align-items-center"><span class="me-2">เวลา</span><input type="time" class="form-control form-control-sm" name="pci_time"></div>
+                        <!-- เพิ่ม ID pciDate และ pciTime และ onchange เข้าไปที่นี่ -->
+                        <div class="col-md-4 col-6 d-flex align-items-center"><span class="me-2">วันที่</span><input type="date" class="form-control form-control-sm" id="pciDate" name="pci_date" onchange="calculateIndicators()"></div>
+                        <div class="col-md-4 col-6 d-flex align-items-center"><span class="me-2">เวลา</span><input type="time" class="form-control form-control-sm" id="pciTime" name="pci_time" onchange="calculateIndicators()"></div>
                     </div>
                     <div class="row align-items-center">
                         <div class="col-md-3 col-12"><input class="form-check-input me-1" type="checkbox" name="reperfusion_med"> <label class="fw-bold">Medical Treatment</label></div>
-                        <div class="col-md-4 col-6 d-flex align-items-center"><span class="me-2">วันที่</span><input type="date" class="form-control form-control-sm" id="medTreatDate" name="med_treat_date" onchange="calculateIndicators()"></div>
-                        <div class="col-md-4 col-6 d-flex align-items-center"><span class="me-2">เวลา</span><input type="time" class="form-control form-control-sm" id="medTreatTime" name="med_treat_time" onchange="calculateIndicators()"></div>
+                        <div class="col-md-4 col-6 d-flex align-items-center"><span class="me-2">วันที่</span><input type="date" class="form-control form-control-sm" id="medTreatDate" name="med_treat_date"></div>
+                        <div class="col-md-4 col-6 d-flex align-items-center"><span class="me-2">เวลา</span><input type="time" class="form-control form-control-sm" id="medTreatTime" name="med_treat_time"></div>
                     </div>
                 </div>
             </div>
@@ -260,7 +261,8 @@
                         <thead class="table-light"><tr><th>ตัวชี้วัด</th><th>เป้าหมาย</th><th>ผลลัพธ์ (อัตโนมัติ)</th></tr></thead>
                         <tbody>
                             <tr><td>Door-to-EKG<br><small class="text-muted">(EKG ครั้งแรก – เวลามาติดต่อ)</small></td><td>≤ 10 นาที</td><td><span id="doorToEkg" class="fw-bold text-primary">-</span> นาที</td></tr>
-                            <tr><td>Door-to-Balloon<br><small class="text-muted">(Medical treatment – เวลามาติดต่อ)</small></td><td>≤ 90 นาที</td><td><span id="doorToBalloon" class="fw-bold text-primary">-</span> นาที</td></tr>
+                            <!-- ปรับแก้ข้อความ Door-to-Balloon เป็น Primary PCI -->
+                            <tr><td>Door-to-Balloon<br><small class="text-muted">(Primary PCI – เวลามาติดต่อโรงพยาบาล)</small></td><td>≤ 90 นาที</td><td><span id="doorToBalloon" class="fw-bold text-primary">-</span> นาที</td></tr>
                             <tr><td>Length of Stay (LOS)<br><small class="text-muted">(วันที่กลับบ้าน – วันที่มาติดต่อ)</small></td><td>≤ 5 วัน</td><td><span id="los" class="fw-bold text-primary">-</span> วัน</td></tr>
                         </tbody>
                     </table>
@@ -269,7 +271,8 @@
 
             <div class="text-center mt-3 mb-3 no-print">
                 <button type="submit" class="btn btn-danger btn-custom btn-lg"><i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูล</button>
-                <button type="button" class="btn btn-secondary btn-custom btn-lg ms-2" onclick="generatePDF()"><i class="fa-solid fa-file-pdf"></i> สร้างเป็น PDF</button>
+                <!-- ปรับแก้ปุ่มเป็น "โหลด PDF" -->
+                <button type="button" class="btn btn-secondary btn-custom btn-lg ms-2" onclick="generatePDF()"><i class="fa-solid fa-file-pdf"></i> โหลด PDF</button>
             </div>
         </form>
 
@@ -309,23 +312,33 @@
         document.getElementById('bmi').value = (w > 0 && h > 0) ? (w / (h * h)).toFixed(2) : '';
     }
 
+    // ปรับแก้ฟังก์ชันคำนวณ ให้ดึงเวลาจาก Primary PCI แทน Medical treatment
     function calculateIndicators() {
         const vDate = document.getElementById('visitDate').value, vTime = document.getElementById('visitTime').value;
         const eTime = document.getElementById('ekgTime').value;
-        const mDate = document.getElementById('medTreatDate').value, mTime = document.getElementById('medTreatTime').value;
+        const pDate = document.getElementById('pciDate').value, pTime = document.getElementById('pciTime').value; // ดึงเวลาจาก Primary PCI
         const dDate = document.getElementById('dischargeDate').value;
 
         if (vTime && eTime) {
             let diff = (new Date(`1970-01-01T${eTime}:00`) - new Date(`1970-01-01T${vTime}:00`)) / 60000;
             document.getElementById('doorToEkg').innerText = diff < 0 ? diff + 1440 : diff;
+        } else {
+            document.getElementById('doorToEkg').innerText = '-';
         }
-        if (vDate && vTime && mDate && mTime) {
-            let diff = (new Date(`${mDate}T${mTime}:00`) - new Date(`${vDate}T${vTime}:00`)) / 60000;
+        
+        // คำนวณ Door-to-Balloon โดยใช้ Primary PCI (pDate, pTime)
+        if (vDate && vTime && pDate && pTime) {
+            let diff = (new Date(`${pDate}T${pTime}:00`) - new Date(`${vDate}T${vTime}:00`)) / 60000;
             document.getElementById('doorToBalloon').innerText = diff >= 0 ? diff : '-';
+        } else {
+            document.getElementById('doorToBalloon').innerText = '-';
         }
+        
         if (vDate && dDate) {
             let diffDays = Math.ceil(Math.abs(new Date(dDate) - new Date(vDate)) / 86400000);
             document.getElementById('los').innerText = diffDays;
+        } else {
+            document.getElementById('los').innerText = '-';
         }
     }
 
@@ -386,37 +399,48 @@
         }).catch(() => Swal.fire('ผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์', 'error'));
     }
 
+    // ปรับปรุงฟังก์ชันสร้าง PDF และทำระบบสำรอง (Fallback) ไปใช้ Print ของเบราว์เซอร์
     function generatePDF() {
-        Swal.fire({ title: 'กำลังสร้างเอกสาร...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+        Swal.fire({ title: 'กำลังเตรียมไฟล์ PDF...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         const hnValue = document.getElementById('hn').value || 'Unknown';
         const element = document.getElementById('printArea');
         
-        // เพิ่มคลาสจัดหน้าเพื่อความสวยงามใน PDF
         element.classList.add('pdf-mode');
 
         const opt = {
             margin: [8, 8, 8, 8],
             filename: `ACS_${hnValue}.pdf`,
             image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false }, // ตั้งค่าให้ไม่เก็บ Log และ Scale 2 ให้ชัดขึ้น
+            html2canvas: { scale: 2, useCORS: true, logging: false },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
-        // ตรวจจับข้อผิดพลาดระหว่างสร้าง
         try {
-            html2pdf().set(opt).from(element).save().then(() => {
+            html2pdf().set(opt).from(element).save()
+            .then(() => {
                 element.classList.remove('pdf-mode');
                 Swal.close();
-                Swal.fire('สำเร็จ', 'ดาวน์โหลด PDF แล้ว', 'success');
-            }).catch(err => {
+                Swal.fire('สำเร็จ', 'โหลดไฟล์ PDF เรียบร้อยแล้ว', 'success');
+            })
+            .catch(err => {
+                console.error("PDF Generation Error: ", err);
                 element.classList.remove('pdf-mode');
                 Swal.close();
-                Swal.fire('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการประมวลผล PDF', 'error');
+                
+                // หาก html2pdf ล้มเหลว จะแสดงแจ้งเตือนและเด้งหน้าต่างปริ้นท์แทน
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'โหลด PDF อัตโนมัติขัดข้อง',
+                    text: 'ระบบจะเปิดหน้าต่างสั่งพิมพ์ ให้คุณเลือกปลายทางเป็น "บันทึกเป็น PDF (Save as PDF)" แทนนะครับ',
+                    confirmButtonText: 'ตกลง'
+                }).then(() => {
+                    window.print();
+                });
             });
         } catch (error) {
             element.classList.remove('pdf-mode');
             Swal.close();
-            Swal.fire('ข้อผิดพลาด', 'เบราว์เซอร์ไม่รองรับการสร้าง PDF', 'error');
+            Swal.fire('ข้อผิดพลาด', 'เบราว์เซอร์ไม่รองรับ กรุณาลองใช้เบราว์เซอร์อื่น', 'error');
         }
     }
 </script>
