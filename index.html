@@ -271,7 +271,6 @@
 
             <div class="text-center mt-3 mb-3 no-print">
                 <button type="submit" class="btn btn-danger btn-custom btn-lg"><i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูล</button>
-                <!-- ปรับแก้ปุ่มเป็น "โหลด PDF" -->
                 <button type="button" class="btn btn-secondary btn-custom btn-lg ms-2" onclick="generatePDF()"><i class="fa-solid fa-file-pdf"></i> โหลด PDF</button>
             </div>
         </form>
@@ -312,11 +311,10 @@
         document.getElementById('bmi').value = (w > 0 && h > 0) ? (w / (h * h)).toFixed(2) : '';
     }
 
-    // ปรับแก้ฟังก์ชันคำนวณ ให้ดึงเวลาจาก Primary PCI แทน Medical treatment
     function calculateIndicators() {
         const vDate = document.getElementById('visitDate').value, vTime = document.getElementById('visitTime').value;
         const eTime = document.getElementById('ekgTime').value;
-        const pDate = document.getElementById('pciDate').value, pTime = document.getElementById('pciTime').value; // ดึงเวลาจาก Primary PCI
+        const pDate = document.getElementById('pciDate').value, pTime = document.getElementById('pciTime').value; 
         const dDate = document.getElementById('dischargeDate').value;
 
         if (vTime && eTime) {
@@ -326,7 +324,6 @@
             document.getElementById('doorToEkg').innerText = '-';
         }
         
-        // คำนวณ Door-to-Balloon โดยใช้ Primary PCI (pDate, pTime)
         if (vDate && vTime && pDate && pTime) {
             let diff = (new Date(`${pDate}T${pTime}:00`) - new Date(`${vDate}T${vTime}:00`)) / 60000;
             document.getElementById('doorToBalloon').innerText = diff >= 0 ? diff : '-';
@@ -399,19 +396,22 @@
         }).catch(() => Swal.fire('ผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์', 'error'));
     }
 
-    // ปรับปรุงฟังก์ชันสร้าง PDF และทำระบบสำรอง (Fallback) ไปใช้ Print ของเบราว์เซอร์
+    // ฟังก์ชันสร้าง PDF ที่ปรับปรุงใหม่ (เปลี่ยน Format ป้องกัน Error และ Reset จุด Scroll)
     function generatePDF() {
         Swal.fire({ title: 'กำลังเตรียมไฟล์ PDF...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
         const hnValue = document.getElementById('hn').value || 'Unknown';
         const element = document.getElementById('printArea');
         
+        // บังคับเลื่อนจอขึ้นไปบนสุด ป้องกันบั๊กภาพดำของ html2canvas
+        window.scrollTo(0, 0);
         element.classList.add('pdf-mode');
 
         const opt = {
             margin: [8, 8, 8, 8],
             filename: `ACS_${hnValue}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2, useCORS: true, logging: false },
+            // เปลี่ยนชนิดไฟล์ภาพเป็น png แก้อาการ Unsupported image type
+            image: { type: 'png' }, 
+            html2canvas: { scale: 2, useCORS: true, scrollY: 0, logging: false },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
         };
 
@@ -427,11 +427,11 @@
                 element.classList.remove('pdf-mode');
                 Swal.close();
                 
-                // หาก html2pdf ล้มเหลว จะแสดงแจ้งเตือนและเด้งหน้าต่างปริ้นท์แทน
+                // ระบบสำรอง หากทำไฟล์ PDF ผ่านไลบรารีไม่ได้ จะเปิดหน้าต่างสั่ง Print แบบข้อความคมชัดแทน
                 Swal.fire({
                     icon: 'warning',
                     title: 'โหลด PDF อัตโนมัติขัดข้อง',
-                    text: 'ระบบจะเปิดหน้าต่างสั่งพิมพ์ ให้คุณเลือกปลายทางเป็น "บันทึกเป็น PDF (Save as PDF)" แทนนะครับ',
+                    text: 'ระบบจะเปิดหน้าต่างสั่งพิมพ์ ให้คุณเปลี่ยนปลายทางเครื่องปริ้นเป็น "บันทึกเป็น PDF (Save as PDF)" เพื่อดาวน์โหลดแทนครับ',
                     confirmButtonText: 'ตกลง'
                 }).then(() => {
                     window.print();
