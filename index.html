@@ -11,6 +11,9 @@
     
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
+    <!-- นำเข้าไลบรารีสำหรับสแกน Barcode / QR Code -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    
     <style>
         body { font-family: 'Prompt', sans-serif; background-color: #f4f7f6; }
         .card { border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 15px; border: none; }
@@ -22,6 +25,11 @@
         .table-meds th, .table-meds td { vertical-align: middle; padding: 5px; }
         .form-check-label { font-size: 0.95rem; }
         
+        /* ซ่อนส่วนของเครื่องสแกนตอนพิมพ์ */
+        #html5-qrcode-button-camera-stop, #html5-qrcode-button-camera-start {
+            margin-top: 10px;
+        }
+
         /* ========================================================
            การตั้งค่าหน้าตาสำหรับ "บันทึกเป็น PDF" (Native Print) 
            ======================================================== */
@@ -30,13 +38,9 @@
             body { background-color: white !important; font-size: 12px !important; }
             .no-print { display: none !important; }
             
-            /* รีเซ็ต Container ให้เต็มหน้ากระดาษ */
             .container { max-width: 100% !important; padding: 0 !important; width: 100% !important; margin: 0 !important; }
-            
-            /* ปรับกรอบ Card ให้เป็นเส้นขอบสีดำคมชัด */
             .card { border: 1px solid #000 !important; box-shadow: none !important; margin-bottom: 8px !important; page-break-inside: avoid; border-radius: 0 !important; }
             
-            /* บังคับให้สีพื้นหลังส่วนหัวติดไปด้วย */
             .card-header { 
                 background-color: #dc3545 !important; 
                 color: white !important; 
@@ -49,7 +53,6 @@
             }
             .card-body { padding: 8px 10px !important; }
             
-            /* จัดการตารางและช่องกรอกข้อมูลให้อ่านง่าย */
             .table-meds th { background-color: #eee !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             .form-control, .form-select, .input-group-text { border: 1px solid #666 !important; padding: 2px 5px !important; font-size: 12px !important; height: auto !important; border-radius: 2px !important; box-shadow: none !important; }
             .form-check-input { border: 1px solid #000 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -73,12 +76,16 @@
         </div>
     </div>
 
+    <!-- แผงค้นหา HN -->
     <div id="searchPanel" class="card mb-3 no-print" style="display: none;">
         <div class="card-body bg-light rounded">
             <div class="row align-items-end">
                 <div class="col-md-8">
-                    <label class="form-label">กรอก HN</label>
-                    <input type="text" id="searchHN" class="form-control" placeholder="ระบุ HN ผู้ป่วย">
+                    <label class="form-label">กรอก HN หรือสแกน Barcode</label>
+                    <div class="input-group">
+                        <input type="text" id="searchHN" class="form-control" placeholder="ระบุ HN ผู้ป่วย">
+                        <button class="btn btn-secondary" type="button" onclick="openScanner()"><i class="fa-solid fa-barcode"></i> สแกน</button>
+                    </div>
                 </div>
                 <div class="col-md-4 mt-2 mt-md-0 d-grid gap-2 d-md-block">
                     <button class="btn btn-primary" onclick="searchData()"><i class="fa-solid fa-magnifying-glass"></i> ค้นหา</button>
@@ -301,9 +308,28 @@
     </div>
 </div>
 
+<!-- Modal สำหรับสแกน Barcode -->
+<div class="modal fade no-print" id="scannerModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title"><i class="fa-solid fa-camera"></i> สแกน Barcode HN</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <div id="reader" width="100%"></div>
+        <p class="text-muted mt-3 mb-0"><small>หันกล้องมือถือไปที่ Barcode เพื่อสแกนอัตโนมัติ</small></p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-cDjGwiT6Cnhaia0dKOMBWgY5vDi6Vxjx-M67Vouk5_iaHLjkiwN_8vQmH_VLkLYX/exec';
     document.getElementById('recordDate').valueAsDate = new Date();
+
+    // ตัวแปรสำหรับเก็บ Object ของกล้องสแกน
+    let html5QrcodeScanner = null;
 
     function toggleMode() {
         const mode = document.querySelector('input[name="modeSelect"]:checked').value;
@@ -318,6 +344,61 @@
             resetIndicators();
         }
     }
+
+    // ==========================================
+    // ระบบสแกน Barcode HN ผ่านกล้อง
+    // ==========================================
+    function openScanner() {
+        const scannerModal = new bootstrap.Modal(document.getElementById('scannerModal'));
+        scannerModal.show();
+
+        document.getElementById('scannerModal').addEventListener('shown.bs.modal', function () {
+            if (!html5QrcodeScanner) {
+                html5QrcodeScanner = new Html5QrcodeScanner(
+                    "reader",
+                    { 
+                        fps: 10, 
+                        qrbox: { width: 250, height: 100 },
+                        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+                    },
+                    false
+                );
+                html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+            }
+        }, { once: true });
+    }
+
+    function onScanSuccess(decodedText, decodedResult) {
+        // ใส่ค่า HN ที่สแกนได้ลงช่อง
+        document.getElementById('searchHN').value = decodedText.trim();
+        
+        // เคลียร์กล้อง
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.clear();
+            html5QrcodeScanner = null;
+        }
+        
+        // ปิดหน้าต่าง Modal
+        const modalEl = document.getElementById('scannerModal');
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) modalInstance.hide();
+        
+        // สั่งค้นหาอัตโนมัติ
+        searchData();
+    }
+
+    function onScanFailure(error) {
+        // ปล่อยผ่านเพื่อให้พยายามสแกนใหม่จนกว่าจะสำเร็จ
+    }
+
+    // กรณีผู้ใช้กดกากบาทปิด Modal เอง ให้ปิดกล้องด้วยเพื่อไม่ให้ค้าง
+    document.getElementById('scannerModal').addEventListener('hidden.bs.modal', function () {
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.clear();
+            html5QrcodeScanner = null;
+        }
+    });
+    // ==========================================
 
     function resetIndicators(){
         document.getElementById('doorToEkg').innerText = '-';
@@ -416,9 +497,6 @@
         }).catch(() => Swal.fire('ผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์', 'error'));
     }
 
-    // ==========================================
-    // ฟังก์ชันสร้าง PDF แก้ปัญหาจอขาว 100%
-    // ==========================================
     function generatePDF() {
         const hnValue = document.getElementById('hn').value || 'Unknown';
         
@@ -430,16 +508,12 @@
             confirmButtonColor: '#dc3545'
         }).then((result) => {
             if (result.isConfirmed) {
-                // [สำคัญ] ต้องหน่วงเวลา 500ms ให้ Popup สีขาวของ SweetAlert ปิดและโดนลบออกจากหน้าจอก่อน 
-                // ถึงจะสั่ง window.print() ได้ เพื่อแก้ปัญหาหน้าจอขาวตอนเซฟ PDF
                 setTimeout(() => {
-                    // บังคับเปลี่ยนชื่อ Title ของเว็บชั่วคราว เพื่อให้ชื่อไฟล์ตอน Save เป็นชื่อที่ต้องการ
                     const originalTitle = document.title;
                     document.title = `ACS_HN_${hnValue}`; 
                     
                     window.print();
                     
-                    // คืนค่าชื่อ Title กลับเป็นเหมือนเดิม
                     document.title = originalTitle; 
                 }, 500); 
             }
