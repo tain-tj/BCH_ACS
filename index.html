@@ -440,7 +440,7 @@
         }
         
         if (vDate && vTime && pDate && pTime) {
-            let diff = (new Date(`${pDate}T${pTime}:00`) - new Date(`${vDate}T${vTime}:00`)) / 60000;
+            let diff = (new Date(`${pDate}T${pTime}:00`) - new Date(`${vDate}T${eTime}:00`)) / 60000;
             document.getElementById('doorToBalloon').innerText = diff >= 0 ? diff : '-';
         } else {
             document.getElementById('doorToBalloon').innerText = '-';
